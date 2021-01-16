@@ -44,7 +44,7 @@ export default {
     Snackbar,
     Headerbox,
     Timebox,
-    Settings
+    Settings,
   },
   data() {
     return {
@@ -54,7 +54,7 @@ export default {
         dhuhr: '...',
         asr: '...',
         maghrib: '...',
-        isha: '...'
+        isha: '...',
       },
       localTime: '...',
       timezone: '...',
@@ -64,17 +64,17 @@ export default {
         country: '',
         timeFormat: 'h:mm A',
         method: 'karachi',
-        lateAsr: true,
+        lateAsr: false,
         snackbar: false,
         dialog: false,
         darkTheme: false, // ignore this
         loader: {
-          loading: false
-        }
+          loading: false,
+        },
       },
       nextWaqt: null,
       timeToNextWaqt: null,
-      waqts: ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha']
+      waqts: ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'],
     };
   },
   created() {
@@ -104,30 +104,35 @@ export default {
         this.settings.dialog = false;
       }
     },
-    async getLocation() {
-      var coords = {};
-      await navigator.geolocation.getCurrentPosition(
-        location => {
-          coords.lat = location.coords.latitude.toFixed(4);
-          coords.lon = location.coords.longitude.toFixed(4);
-          this.getTimes(coords);
-        },
-        err => {
-          console.log(err);
-          console.log('Fallback to IP geolocation');
-          this.$axios
-            .get('https://api.ipgeolocationapi.com/geolocate')
-            .then(response => {
-              coords.lat = response.data.geo.latitude.toFixed(4);
-              coords.lon = response.data.geo.longitude.toFixed(4);
-              this.getTimes(coords);
-            })
-            .catch(error => {
-              this.settings.snackbar = true;
-              console.log(error);
-            });
-        }
-      );
+    getLocation() {
+      var coords = {
+        lat: 7.2945,
+        lon: 80.5907,
+      };
+      this.getTimes(coords);
+      // await navigator.geolocation.getCurrentPosition(
+      //   (location) => {
+      //     coords.lat = location.coords.latitude.toFixed(4);
+      //     coords.lon = location.coords.longitude.toFixed(4);
+      //     this.getTimes(coords);
+      //     console.log(coords.lat, coords.lon);
+      //   },
+      //   (err) => {
+      //     console.log(err);
+      //     console.log('Fallback to IP geolocation');
+      //     this.$axios
+      //       .get('https://api.ipgeolocationapi.com/geolocate')
+      //       .then((response) => {
+      //         coords.lat = response.data.geo.latitude.toFixed(4);
+      //         coords.lon = response.data.geo.longitude.toFixed(4);
+      //         this.getTimes(coords);
+      //       })
+      //       .catch((error) => {
+      //         this.settings.snackbar = true;
+      //         console.log(error);
+      //       });
+      //   }
+      // );
     },
     getTimes(coords) {
       const adhan = require('adhan');
@@ -140,6 +145,15 @@ export default {
       switch (method) {
         case 'karachi':
           params = adhan.CalculationMethod.Karachi();
+          params.adjustments.fajr = -4;
+          params.adjustments.sunrise = 3;
+          params.adjustments.dhuhr = 4;
+          params.adjustments.asr = 5;
+          params.adjustments.maghrib = 4;
+          params.adjustments.isha = 4;
+
+          // params.madhab = adhan.madhab.Shafi;
+          // params
           break;
         case 'mwl':
           params = adhan.CalculationMethod.MuslimWorldLeague();
@@ -179,17 +193,13 @@ export default {
         dhuhr: moment(prayerTimes.dhuhr).format(this.settings.timeFormat),
         asr: moment(prayerTimes.asr).format(this.settings.timeFormat),
         maghrib: moment(prayerTimes.maghrib).format(this.settings.timeFormat),
-        isha: moment(prayerTimes.isha).format(this.settings.timeFormat)
+        isha: moment(prayerTimes.isha).format(this.settings.timeFormat),
       };
 
       // Set data
       this.times = formattedTimes;
       this.localTime = moment().format('MMMM Do YYYY');
-      this.timezone =
-        'GMT' +
-        moment()
-          .parseZone()
-          .format('Z');
+      this.timezone = 'GMT' + moment().parseZone().format('Z');
       const { nextWaqt, timeToNextWaqt } = this.determineNextWaqt(formattedTimes);
       this.nextWaqt = nextWaqt;
       this.timeToNextWaqt = timeToNextWaqt;
@@ -235,16 +245,12 @@ export default {
 
       return {
         nextWaqt,
-        timeToNextWaqt
+        timeToNextWaqt,
       };
     },
     /** Determines calculation method coarsely from timezone */
     determineCalcMethod() {
-      const timeZone = parseInt(
-        moment()
-          .parseZone()
-          .format('Z')
-      );
+      const timeZone = parseInt(moment().parseZone().format('Z'));
       if (timeZone >= 0 && timeZone <= 2) {
         return 'mwl';
       } else if (timeZone >= 3 && timeZone <= 4) {
@@ -267,17 +273,17 @@ export default {
       localStorage.setItem('calcMethod', parameters.calcMethod);
       localStorage.setItem('lateAsr', parameters.lateAsr);
       // location.reload();
-    }
+    },
   },
   watch: {
-    'settings.dialog': function(val) {
+    'settings.dialog': function (val) {
       if (val === true) {
         location.hash = 'settings';
       } else {
         location.hash = '';
       }
-    }
-  }
+    },
+  },
 };
 </script>
 

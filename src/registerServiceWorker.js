@@ -2,7 +2,19 @@
 
 import { register } from 'register-service-worker';
 
-if (process.env.NODE_ENV === 'production') {
+
+// const applicationServerPublicKey = 'BPbsGgZaUywODRHlySig1O0DKptqyr4mi2v_2LY7BAwg74mHLf8LCPV-jf98SyxGQwSPx7q4su3_-DmyHnRheaw';
+// let swRegistration = null;
+// let isSubscribed = false;
+
+
+
+
+// if (process.env.NODE_ENV === 'production') {
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+        console.log('Service Worker and Push is supported');
+
+
     register(`${process.env.BASE_URL}service-worker.js`, {
         ready() {
             console.log(
@@ -10,8 +22,12 @@ if (process.env.NODE_ENV === 'production') {
                     'For more details, visit https://goo.gl/AFskqB'
             );
         },
-        registered() {
-            console.log('Service worker has been registered.');
+        registered(swReg) {
+            console.log('Service worker has been registered.', swReg);
+            // swRegistration = swReg;
+            // subscribeUser();
+            // initializeUI();
+
         },
         cached() {
             console.log('Content has been cached for offline use.');
@@ -29,4 +45,26 @@ if (process.env.NODE_ENV === 'production') {
             console.error('Error during service worker registration:', error);
         }
     });
-}
+// }
+    }
+
+      
+
+    Notification.requestPermission().then(function(result) {
+        if(result === 'granted') {
+            randomNotification();
+        }
+    });
+
+      function randomNotification() {
+        // var randomItem = 3;
+        var notifTitle = 'Waqt';
+        var notifBody = 'Reminder for prayer';
+        // var notifImg = 'data/img/'+games[randomItem].slug+'.jpg';
+        var options = {
+            body: notifBody,
+            // icon: notifImg
+        }
+        var notif = new Notification(notifTitle, options);
+        setTimeout(randomNotification, 10800000);
+    }
